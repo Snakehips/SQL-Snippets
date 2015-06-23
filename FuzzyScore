@@ -1,0 +1,84 @@
+/****** Object:  UserDefinedFunction [dbo].[fnFuzzyScore]    Script Date: 06/23/2015 15:09:31 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER FUNCTION [dbo].[fnFuzzyScore] 
+(
+	@strTested varchar(50),
+	@strWith varchar(50)
+)
+RETURNS float
+AS
+BEGIN
+	declare @dblRetvar	float
+	declare @strA				varchar(50)
+	declare @strB				varchar(50)
+	declare @intLenA		integer
+	declare @intLenB		integer
+	declare @intC				integer
+	declare @intC2			integer
+	declare @strPattern varchar(52) 
+	declare @intHits		integer
+	declare @intMaxHits integer
+	
+	set @dblRetvar=0.00
+	
+	set @strTested=ltrim(rtrim(@strTested))
+	set @strwith=ltrim(rtrim(@strWith))
+	
+	set @strA=@strWith
+	set @strB=@strTested
+
+	set @intLenA=len(@strA)
+	set @intLenB=len(@strB)
+
+	set @intc=1
+	set @intc2=1
+	set @intHits=0
+	set @intMaxHits=0
+	
+	if (@intLenA>0)
+	begin
+		WHILE @intC <= @intLenA 
+		BEGIN
+			WHILE @intC2 <= @intLenA+1-@intc
+			BEGIN
+				--Test for any match
+				set @strPattern='%' + substring(@strA,@intC,@intc2) + '%'
+				if patindex(@strpattern,@strB)>0
+				begin
+					set @intHits=@intHits + 1 --@intC
+				end
+				set @intmaxhits=@intmaxhits + 1 --@intC
+				
+				--Test for any transposed match
+				set @strPattern='%' + reverse(substring(@strA,@intC,@intc2)) + '%'
+				if patindex(@strpattern,@strB)>0
+				begin
+					set @intHits=@intHits + 1 --@intC
+					set @intmaxhits=@intmaxhits + 1 --@intC
+				end
+								
+				--Test for positional exact match
+				if substring(@strA,@intC,@intc2)=substring(@strB,@intC,@intc2)
+				begin
+					set @intHits=@intHits + 1 --@intC
+				end
+				set @intmaxhits=@intmaxhits + 1 --@intC
+				
+				SET @intC2 = @intC2 + 1
+			END
+			SET @intC = @intC + 1
+			set @intc2=1
+		END
+		set @dblRetvar= cast(@inthits as float)/cast(@intMaxhits as float)
+		
+	end
+	else
+	begin
+		set @dblRetvar=0
+	end
+	return @dblRetvar	
+END
+
