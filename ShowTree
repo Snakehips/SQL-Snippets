@@ -1,0 +1,37 @@
+ALTER PROCEDURE [dbo].[ser_ServiceTree]
+AS
+BEGIN
+
+	SET NOCOUNT ON;
+
+;with servcte(f_ser_id,f_ser_Name, lvl, sort, f_SER_Inactive) as
+(
+	select 
+	sv.f_SER_ID
+	, cast(sv.f_SER_Name as nvarchar(150))
+	, 1
+	, CAST('\' + sv.f_SER_Name as nvarchar(150))
+	,sv.f_SER_Inactive
+	from dbo.t_Services as sv
+	where sv.f_SER_Parent=-1  and sv.f_SER_ID>=0 and sv.f_SER_Inactive=0
+	
+	union all
+	
+	select  
+	sv.f_SER_ID
+	, cast(replicate('|     ',lvl) + sv.f_SER_Name as nvarchar(150))
+	, lvl+1
+	, CAST(cte.sort + '\' + sv.f_SER_Name as nvarchar(150))
+	,sv.f_SER_Inactive
+	from dbo.t_Services as sv
+	join servcte as cte on sv.f_SER_Parent=cte.f_ser_id and sv.f_SER_Inactive=0
+	
+)
+select f_ser_id,f_ser_name, lvl from servcte 
+where f_SER_inactive=0 
+order by sort
+
+option (maxrecursion 100);	
+	
+
+END
